@@ -1,37 +1,14 @@
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-##############
 
-UserModel = get_user_model()
-
-
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
-    def create(self, validated_data):
-        user = UserModel.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password'],
-            email=validated_data['email'],
-
-        )
-
-        return user
-
-    class Meta:
-        model = UserModel
-        # serialized model fields
-        fields = ("id", "username", "password")
-
-
-##############
-
-
-def clean_email(value):
-    if 'gmail' not in value:
-        raise serializers.ValidationError('Invalid email')
+def validate_email(value):
+    lower_email = value.lower()
+    if User.objects.filter(email__iexact=lower_email).exists():
+        raise serializers.ValidationError("Email exists!")
+    if "@gmail" not in value:
+        raise serializers.ValidationError("Only Gmail!")
+    return lower_email
 
 
 def validate_username(value):
@@ -42,13 +19,15 @@ def validate_username(value):
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     passwordConfirm = serializers.CharField(write_only=True, required=True)
+    email = serializers.EmailField(required=True)
 
     class Meta:
         model = User
         fields = ('username', 'email', 'password', 'passwordConfirm')
         extra_kwargs = {
             'password': {'write_only': True},
-            'email': {'validators': (clean_email,)}
+            'email': {'validators': (validate_email,)},
+            'username': {'validators': (validate_username,)}
         }
 
     def create(self, validated_data):
