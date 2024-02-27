@@ -1,1 +1,1 @@
-Back-end for project with django and RSET API
+Back-end with django and RSET API.
