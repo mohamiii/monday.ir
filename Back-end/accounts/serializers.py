@@ -18,8 +18,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return User.objects.create_user(**validated_data)
 
     def validate(self, data):
+        """validates passwords: passwords must contain 8 characters with numbers and digits"""
         if data['password'] != data['passwordConfirm']:
-            raise serializers.ValidationError('password does not match')
+            raise serializers.ValidationError('Passwords do not match')
 
         min_length = 8
 
@@ -37,14 +38,22 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return data
 
     def validate_email(self, value):
+        """validates emails: emails have to be from gmail, emails will be lower-cased"""
         lower_email = value.lower()
         if User.objects.filter(email__iexact=lower_email).exists():
             raise serializers.ValidationError("Email exists!")
         if "@gmail" not in value:
-            raise serializers.ValidationError("Only Gmail allowed!")
+            raise serializers.ValidationError("Only Gmail is allowed.")
         return lower_email
 
     def validate_username(self, value):
-        if value == 'admin':
-            raise serializers.ValidationError('Username can\'t be `admin`')
+        """validates usernames: admin or duplicate usernames not allowed"""
+        if 'admin' in value.lower():
+            raise serializers.ValidationError('Username can\'t be admin')
         return value
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
