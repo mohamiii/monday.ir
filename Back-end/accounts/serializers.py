@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    def validate_email(self, value):
+    @staticmethod
+    def validate_email(value):
         """validates emails: emails have to be from gmail, emails will be lower-cased"""
         lower_email = value.lower()
         if User.objects.filter(email__iexact=lower_email).exists():
@@ -12,7 +13,8 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Only Gmail is allowed.")
         return lower_email
 
-    def validate_username(self, value):
+    @staticmethod
+    def validate_username(value):
         """validates usernames: admin or duplicate usernames not allowed"""
         if 'admin' in value.lower():
             raise serializers.ValidationError('Username can\'t be admin')
