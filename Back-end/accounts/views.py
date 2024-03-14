@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserRegisterSerializer, UserSerializer
-from rest_framework import status, viewsets
+from .serializers import UserRegisterSerializer, UserSerializer, ChangePasswordSerializer
+from rest_framework import status, viewsets, generics
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -54,3 +54,9 @@ class UserViewSet(viewsets.ViewSet):
         user.is_active = False
         user.save()
         return Response({'message': 'User deactivated'})
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ChangePasswordSerializer

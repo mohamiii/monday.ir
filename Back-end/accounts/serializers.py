@@ -3,31 +3,6 @@ from django.contrib.auth.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    passwordConfirm = serializers.CharField(write_only=True, required=True)
-
-    def validate(self, data):
-        """validates passwords: passwords must contain 8 characters with numbers and digits"""
-        if data['password'] != data['passwordConfirm']:
-            raise serializers.ValidationError('Passwords do not match')
-
-        min_length = 8
-        if len(data['password']) < min_length:
-            raise serializers.ValidationError('Password must be at least {0} characters long.'.format(min_length))
-
-        # check for digit
-        if not any(char.isdigit() for char in data['password']):
-            raise serializers.ValidationError('Password must contain at least 1 digit.')
-
-        # check for letter
-        if not any(char.isalpha() for char in data['password']):
-            raise serializers.ValidationError('Password must contain at least 1 letter.')
-        return data
-
-    def update(self, instance, validated_data):
-        instance.set_password(validated_data['password'])
-        instance.save()
-        return instance
-
     @staticmethod
     def validate_email(value):
         """validates emails: emails have to be from gmail, emails will be lower-cased"""
@@ -48,8 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id",
-                  "password",
-                  "passwordConfirm",
                   "last_login",
                   "username",
                   "first_name",
@@ -69,6 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRegisterSerializer(UserSerializer):
+    passwordConfirm = serializers.CharField(write_only=True, required=True)
     email = serializers.EmailField(required=True)
 
     class Meta:
@@ -81,3 +55,48 @@ class UserRegisterSerializer(UserSerializer):
     def create(self, validated_data):
         del validated_data['passwordConfirm']
         return User.objects.create_user(**validated_data)
+
+    def validate(self, data):
+        """validates passwords: passwords must contain 8 characters with numbers and digits"""
+        if data['password'] != data['passwordConfirm']:
+            raise serializers.ValidationError('Passwords do not match')
+
+        min_length = 8
+        if len(data['password']) < min_length:
+            raise serializers.ValidationError('Password must be at least {0} characters long.'.format(min_length))
+
+        # check for digit
+        if not any(char.isdigit() for char in data['password']):
+            raise serializers.ValidationError('Password must contain at least 1 digit.')
+
+        # check for letter
+        if not any(char.isalpha() for char in data['password']):
+            raise serializers.ValidationError('Password must contain at least 1 letter.')
+
+        return data
+
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+    password_confirm = serializers.CharField(write_only=True, required=True)
+    old_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('old_password', 'password', 'password_confirm')
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return attrs
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError({"old_password": "Old password is not correct"})
+        return value
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+        return instance
