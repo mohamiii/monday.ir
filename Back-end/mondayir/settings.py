@@ -143,7 +143,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=50),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=100),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -181,9 +181,3 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
-
-# SPECTACULAR_SETTINGS = {
-#     'TITLE': 'Task Management Site',
-#     'DESCRIPTION': 'Trello like work management',
-#     'VERSION': '1.0.0',
-# }
